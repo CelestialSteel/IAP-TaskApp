@@ -1,0 +1,11 @@
+commit fc167286b0d8486243f53ce2a4d31542fa88d1d1 (HEAD -> master, origin/master, origin/HEAD)
+Author: Griffin Sitati <sitatigriffin71@gmail.com>
+Date:   Fri Sep 12 23:01:19 2025 +0300
+
+    Added Word doc for git workflow
+
+commit c6c90b67a4685e7777acdbf8424bbf4d388da7b3
+Author: Griffin Sitati <sitatigriffin71@gmail.com>
+Date:   Fri Sep 12 22:31:09 2025 +0300
+
+    Mailing functionality for successful registration and connection to database recording users.Along with catalogue page for courses
