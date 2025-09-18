@@ -7,8 +7,6 @@ $conf['site_name'] = 'Mastermind';
 $conf['site_url'] = 'http://localhost/taskapp';
 $conf['site_email'] = 'mastermind@gmail.com';
 
-// Site language
-$conf['site_lang'] = 'en';
 
 // Database Constants
 $conf['DB_TYPE'] = 'mysqli';
