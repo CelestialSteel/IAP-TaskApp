@@ -144,4 +144,64 @@ public function signup($lang, $conf, $ObjSendMail) {
         'verification_code' => $verification_code,
     ];
     $mailBody = $this->TemplateVarbind($mailCont['body'], $mailCont);
-}}
+}
+
+public function verifyEmail($lang, $conf) {
+    if (!isset($_GET['code']) || empty($_GET['code'])) {
+        echo $lang['invalid_verification_link'];
+        return false;
+    }
+
+    $verification_code = trim($_GET['code']);
+
+    $mysqli = @new mysqli($conf['DB_HOST'], $conf['DB_USER'], $conf['DB_PASS'], $conf['DB_NAME']);
+    if ($mysqli->connect_error) {
+        http_response_code(500);
+        echo 'Database connection failed: ' . htmlspecialchars($mysqli->connect_error, ENT_QUOTES, 'UTF-8');
+        return false;
+    }
+    $mysqli->set_charset('utf8mb4');
+
+    $stmt = $mysqli->prepare('SELECT id FROM users WHERE verification_code = ? AND verified = 0');
+    if (!$stmt) {
+        http_response_code(500);
+        echo 'Database error.';
+        $mysqli->close();
+        return false;
+    }
+
+    $stmt->bind_param('s', $verification_code);
+    $stmt->execute();
+    $stmt->store_result();
+
+    if ($stmt->num_rows === 0) {
+        echo $lang['invalid_or_expired_verification_code'];
+        $stmt->close();
+        $mysqli->close();
+        return false;
+    }
+
+    $stmt->close();
+
+    $stmt = $mysqli->prepare('UPDATE users SET verified = 1, verification_code = NULL WHERE verification_code = ?');
+    if (!$stmt) {
+        http_response_code(500);
+        echo 'Database error.';
+        $mysqli->close();
+        return false;
+    }
+
+    $stmt->bind_param('s', $verification_code);
+    $success = $stmt->execute();
+    $stmt->close();
+    $mysqli->close();
+
+    if ($success) {
+        echo $lang['email_verified_successfully'];
+        return true;
+    } else {
+        echo $lang['verification_failed'];
+        return false;
+    }
+}
+}

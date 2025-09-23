@@ -17,6 +17,10 @@
         'contact_us' => 'Contact Us',
         'privacy_policy' => 'Privacy Policy',
         'terms_of_service' => 'Terms of Service',
+        'invalid_verification_link' => 'Invalid verification link.',
+        'invalid_or_expired_verification_code' => 'Invalid or expired verification code.',
+        'email_verified_successfully' => 'Your email has been verified successfully! Redirecting to login page...',
+        'verification_failed' => 'Email verification failed. Please try again.',
         // Add more key-value pairs as needed
     );
 
