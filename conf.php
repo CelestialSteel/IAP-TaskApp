@@ -12,7 +12,7 @@ $conf['site_email'] = 'mastermind@gmail.com';
 $conf['DB_TYPE'] = 'mysqli';
 $conf['DB_HOST'] = 'localhost:3307';
 $conf['DB_USER'] = 'root';
-$conf['DB_PASS'] = '';
+$conf['DB_PASS'] = 'your_password';
 $conf['DB_NAME'] = 'taskapp';
 
 // Supported site languages

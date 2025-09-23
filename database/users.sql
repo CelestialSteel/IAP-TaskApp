@@ -45,7 +45,7 @@ INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `created_at`) V
 (3, 'celeste', 'mylo_prince@gmail.com', '$2y$10$UFZPBYCWJU9VB2vmHEHGc.F9MYv.XIz44eW9Iwji8d36RkC5WWNZ6', '2025-09-12 20:55:16'),
 (4, 'Gambit', 'quincy_destroyer@gmail.com', '$2y$10$GBPPbSYw7NsVyFWTv.lz7exLm11XoHoEQGXueo.lfswkWuRIFhjTS', '2025-09-12 21:01:06');
 
---
+--c
 -- Indexes for dumped tables
 --
 

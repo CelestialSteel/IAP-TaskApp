@@ -77,7 +77,7 @@ $mailCnt = [
     'to_email'   => $email,
     'to_name'    => $username,
     'subject'    => 'Enrollment Confirmation - Mastermind',
-    'body'       => '<p>Congratulations ' . htmlspecialchars($username, ENT_QUOTES, 'UTF-8') . ', you have successfully enrolled to the Mastermind course!!! Prepare for a nerve-wracking but thought provoking and fulfilling experience. Cannot wait to interract with you.</p>'
+    'body'       => '<p>Congratulations ' . htmlspecialchars($username, ENT_QUOTES, 'UTF-8') . ', you have successfully enrolled to the Mastermind course!!! Prepare for a nerve-wracking but thought provoking and fulfilling experience. Cannot wait to interract with you. To continue, please click the following link to activate your account: ' . $activation_link . '.<br>The activation key will expire at: ' . date('Y-m-d H:i:s', $expiration_time) . '</p>'
 ];
 
 // Send email after successful insert
