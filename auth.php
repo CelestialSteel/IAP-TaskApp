@@ -10,79 +10,138 @@ $auth_config = array(
     );
 
   class auth{
-    private function TemplateVarbind($template, $vars) {
-        foreach ($vars as $key => $value) {
-            $template = str_replace('{' . $key . '}', htmlspecialchars($value, ENT_QUOTES, 'UTF-8'), $template);
-        }
+
+private function replaceTemplateVars(string $template, array $vars): string {
+    foreach ($vars as $key => $value) {
+        $value = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+        $template = str_replace("{{$key}}", $value, $template);
+    }
+
     return $template;
-  }  
+}
 
-  public function Signup($lang,$conf,$ObjSendMail){
+public function signup($lang, $conf, $ObjSendMail) {
 
-    if(isset($_POST['signup'])){
-        $username = trim($_POST['username']);
-        $email = trim($_POST['email']);
-        $password = $_POST['password'];
-        $confirm_password = $_POST['confirm_password'];
+    if (!isset($_POST['signup'])) {
+        return;
+    }
 
-        // Basic validation
-        if (empty($username) || empty($email) || empty($password) || empty($confirm_password)) {
-            echo $lang['all_fields_required'];
-            return;
-        if( !preg_match('/^[a-zA-Z0-9_]{3,20}$/', $username)) {
-            echo $lang['invalid_username'];
-            return;
-        }
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw new InvalidArgumentException($lang['invalid_email']);
-        }
-        if ($password !== $confirm_password) {
-            echo $lang['passwords_do_not_match'];
-            return;
-        }
-        if (strlen($password) < 6) {
-            echo $lang['password_too_short'];
-            return;
-        }
+    $username = trim($_POST['username']);
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
 
-        // Connect to DB
-        $mysqli = @new mysqli($conf['DB_HOST'], $conf['DB_USER'], $conf['DB_PASS'], $conf['DB_NAME']);
-        if ($mysqli->connect_error) {
-            http_response_code(500);
-            echo 'Database connection failed: ' . htmlspecialchars($mysqli->connect_error, ENT_QUOTES, 'UTF-8');
-            return;
-        }
-        $mysqli->set_charset('utf8mb4');
+    if (empty($username) || empty($email) || empty($password) || empty($confirm_password)) {
+        echo $lang['all_fields_required'];
+        return;
+    }
 
-        // Check for existing username or email
-        $stmt = $mysqli->prepare('SELECT id FROM users WHERE username = ? OR email = ?');
-        if (!$stmt) {
-            http_response_code(500);
-            echo 'Database error.';
-            $mysqli->close();
-            return;
-        }
-        $stmt->bind_param('ss', $username, $email);
-        $stmt->execute();
-        $stmt->store_result();
-        if ($stmt->num_rows > 0) {
-            echo $lang['username_or_email_exists'];
-            $stmt->close();
-            $mysqli->close();
-            return;
-        }
+    if (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $username)) {
+        echo $lang['invalid_username'];
+        return;
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        throw new InvalidArgumentException($lang['invalid_email']);
+    }
+
+    if ($password !== $confirm_password) {
+        echo $lang['passwords_do_not_match'];
+        return;
+    }
+
+    if (strlen($password) < 6) {
+        echo $lang['password_too_short'];
+        return;
+    }
+
+    $mysqli = @new mysqli($conf['DB_HOST'], $conf['DB_USER'], $conf['DB_PASS'], $conf['DB_NAME']);
+    if ($mysqli->connect_error) {
+        http_response_code(500);
+        echo 'Database connection failed: ' . htmlspecialchars($mysqli->connect_error, ENT_QUOTES, 'UTF-8');
+        return;
+    }
+    $mysqli->set_charset('utf8mb4');
+
+    $stmt = $mysqli->prepare('SELECT id FROM users WHERE username = ? OR email = ?');
+    if (!$stmt) {
+        http_response_code(500);
+        echo 'Database error.';
+        $mysqli->close();
+        return;
+    }
+    $stmt->bind_param('ss', $username, $email);
+    $stmt->execute();
+    $stmt->store_result();
+    if ($stmt->num_rows > 0) {
+        echo $lang['username_or_email_exists'];
         $stmt->close();
+        $mysqli->close();
+        return;
+    }
+    $stmt->close();
 
-        // Hash the password
-        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+    $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
-        // Insert new user
-        $stmt = $mysqli->prepare('INSERT INTO users (username, email, password_hash, created_at) VALUES (?, ?, ?, NOW())');
-        if (!$stmt) {
-            http_response_code(500);
-            echo 'Database error.';
-            $mysqli->close();
-            return;
-        }
-        $stmt->bind_param('sss', $username, $email, $password_hash);
-  }
+    $stmt = $mysqli->prepare('INSERT INTO users (username, email, password_hash, created_at) VALUES (?, ?, ?, NOW())');
+    if (!$stmt) {
+        http_response_code(500);
+        echo 'Database error.';
+        $mysqli->close();
+        return;
+    }
+    $stmt->bind_param('sss', $username, $email, $password_hash);
+    if (!$stmt->execute()) {
+        http_response_code(500);
+        echo 'Database error.';
+        $stmt->close();
+        $mysqli->close();
+        return;
+    }
+    $stmt->close();
+
+    $verification_code = bin2hex(random_bytes(16));
+    $stmt = $mysqli->prepare('UPDATE users SET verification_code = ? WHERE email = ?');
+    if (!$stmt) {
+        http_response_code(500);
+        echo 'Database error.';
+        $mysqli->close();
+        return;
+    }
+    $stmt->bind_param('ss', $verification_code, $email);
+    $stmt->execute();
+    $stmt->close();
+
+    $stmt = $mysqli->prepare('SELECT id FROM users WHERE email = ?');
+    if (!$stmt) {
+        http_response_code(500);
+        echo 'Database error.';
+        $mysqli->close();
+        return;
+    }
+    $stmt->bind_param('s', $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+    $user_id = $user ? $user['id'] : null;
+    $stmt->close();
+
+    $mysqli->close();
+
+    // Send verification email
+   $fromEmail = !empty($conf['site_email']) ? $conf['site_email'] : (!empty($conf['smtp_user']) ? $conf['smtp_user'] : 'no-reply@example.com');
+    $fromName = !empty($conf['site_name']) ? $conf['site_name'] : 'Mastermind';
+    $mailCont = [
+        'from_email' => $fromEmail,
+        'from_name'  => $fromName,
+        'to_email'   => $email,
+        'to_name'    => $username,
+        'subject'    => 'Verify your email address',
+        'body'       => $lang['verify_email_body'],
+        'body_html'  => $lang['verify_email_body_html'],
+        'site_name'  => $conf['site_name'],
+        'site_url'   => $conf['site_url'],
+        'verification_code' => $verification_code,
+    ];
+    $mailBody = $this->TemplateVarbind($mailCont['body'], $mailCont);
+}}
