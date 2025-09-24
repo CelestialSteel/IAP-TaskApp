@@ -1,7 +1,12 @@
 <?php
+require_once __DIR__ . '/../plugin/PHPMailer/src/PHPMailer.php';
+require_once __DIR__ . '/../plugin/PHPMailer/src/SMTP.php';
+require_once __DIR__ . '/../plugin/PHPMailer/src/Exception.php';
+
 use PHPMailer\PHPMailer\PHPMailer;
-        use PHPMailer\PHPMailer\SMTP;           
-        use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
 class SendMail {
     public function send($conn,$mailCnt){
     global $conf;
@@ -14,8 +19,12 @@ class SendMail {
     $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
     $mail->Username   = $conf['smtp_user'];                     //SMTP username
     $mail->Password   = $conf['smtp_pass'];                               //SMTP password
-    $mail->SMTPSecure = $conf['smtp_secure'];
-                //Enable implicit TLS encryption
+    // Set encryption based on configuration
+    if ($conf['smtp_secure'] === 'ssl') {
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+    } else if ($conf['smtp_secure'] === 'tls') {
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    }
     $mail->Port       = $conf['smtp_port'];                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
 
    $mail->setFrom($mailCnt['from_email'], $mailCnt['from_name']);
