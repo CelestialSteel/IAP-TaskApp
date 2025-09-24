@@ -10,7 +10,7 @@ if ($mysqli->connect_error) {
 }
 $mysqli->set_charset('utf8mb4');
 
-// Fetch users in ascending order by username (change to created_at if preferred)
+// Fetch users in ascending order by username 
 $sql = 'SELECT id, username, email, created_at FROM users ORDER BY username ASC';
 $result = $mysqli->query($sql);
 if ($result === false) {
